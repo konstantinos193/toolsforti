@@ -99,4 +99,35 @@ declare module 'd3' {
 
   // Add lineRadial function
   export function lineRadial<Datum>(): LineRadial<Datum>
+
+  // Add CurveFactory interface
+  interface CurveFactory {
+    (context: CanvasRenderingContext2D): Curve
+  }
+
+  interface Curve {
+    lineStart(): void
+    lineEnd(): void
+    point(x: number, y: number): void
+  }
+
+  // Add curve factories
+  export const curveLinearClosed: CurveFactory
+  export const curveLinear: CurveFactory
+  export const curveStep: CurveFactory
+  export const curveStepBefore: CurveFactory
+  export const curveStepAfter: CurveFactory
+  export const curveBasis: CurveFactory
+  export const curveBasisClosed: CurveFactory
+  export const curveBasisOpen: CurveFactory
+  export const curveBundle: CurveFactory
+  export const curveCardinal: CurveFactory
+  export const curveCardinalClosed: CurveFactory
+  export const curveCardinalOpen: CurveFactory
+  export const curveCatmullRom: CurveFactory
+  export const curveCatmullRomClosed: CurveFactory
+  export const curveCatmullRomOpen: CurveFactory
+  export const curveMonotoneX: CurveFactory
+  export const curveMonotoneY: CurveFactory
+  export const curveNatural: CurveFactory
 } 
