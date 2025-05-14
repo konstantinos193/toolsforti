@@ -57,7 +57,7 @@ export default function RiskTimeline({ data }: RiskTimelineProps) {
       .attr("fill", "none")
       .attr("stroke", "rgba(255, 193, 7, 0.8)")
       .attr("stroke-width", 2)
-      .attr("d", line)
+      .attr("d", (d) => line(d))
 
     // Add the dots
     svg
