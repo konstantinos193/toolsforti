@@ -14,13 +14,9 @@ import RiskRadarChart from "./risk-radar-chart"
 import RiskTimeline from "./risk-timeline"
 import SecurityAudit from "./security-audit"
 
-interface PageProps {
-  params: { [key: string]: string }
-  searchParams?: { [key: string]: string | string[] | undefined }
-}
-
 interface AnalyzePageProps {
   params: { id: string }
+  searchParams?: { [key: string]: string | string[] | undefined }
 }
 
 export default function AnalyzePage({ params }: AnalyzePageProps) {
