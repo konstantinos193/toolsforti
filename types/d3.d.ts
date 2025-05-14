@@ -131,4 +131,22 @@ declare module 'd3' {
   export const curveMonotoneX: CurveFactory
   export const curveMonotoneY: CurveFactory
   export const curveNatural: CurveFactory
+
+  // Add Line interface
+  interface Line<Datum> {
+    (data: Datum[]): string | null
+    x(): (d: Datum, i: number, data: Datum[]) => number
+    x(x: number | ((d: Datum, i: number, data: Datum[]) => number)): this
+    y(): (d: Datum, i: number, data: Datum[]) => number
+    y(y: number | ((d: Datum, i: number, data: Datum[]) => number)): this
+    curve(): d3.CurveFactory
+    curve(curve: d3.CurveFactory): this
+    defined(): (d: Datum, i: number, data: Datum[]) => boolean
+    defined(defined: boolean | ((d: Datum, i: number, data: Datum[]) => boolean)): this
+    context(): CanvasRenderingContext2D | null
+    context(context: CanvasRenderingContext2D | null): this
+  }
+
+  // Add line function
+  export function line<Datum>(): Line<Datum>
 } 
