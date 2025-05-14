@@ -1,4 +1,6 @@
 declare module 'd3' {
+  import { Selection, BaseType } from 'd3-selection'
+  
   export * from 'd3-array'
   export * from 'd3-axis'
   export * from 'd3-brush'
@@ -29,4 +31,7 @@ declare module 'd3' {
   export * from 'd3-timer'
   export * from 'd3-transition'
   export * from 'd3-zoom'
+
+  export function select(selector: string | BaseType): Selection<BaseType, unknown, null, undefined>
+  export function selectAll(selector: string): Selection<BaseType, unknown, null, undefined>
 } 
