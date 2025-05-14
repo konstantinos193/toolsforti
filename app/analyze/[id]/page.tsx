@@ -6,12 +6,11 @@ export const metadata: Metadata = {
   description: "Detailed analysis of token metrics and security",
 }
 
-type PageProps = {
-  params: Promise<{ id: string }>
-  searchParams?: { [key: string]: string | string[] | undefined }
+type Props = {
+  params: { id: string }
+  searchParams: { [key: string]: string | string[] | undefined }
 }
 
-export default async function AnalyzePage(props: PageProps) {
-  const params = await props.params
+export default function AnalyzePage({ params }: Props) {
   return <AnalyzePageClient params={params} />
 }

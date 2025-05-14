@@ -5,13 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 
-interface TokenPageProps {
-  params: Promise<{ id: string }>
-  searchParams?: { [key: string]: string | string[] | undefined }
+type Props = {
+  params: { id: string }
+  searchParams: { [key: string]: string | string[] | undefined }
 }
 
-export default async function TokenPage(props: TokenPageProps) {
-  const params = await props.params
+export default function TokenPage({ params }: Props) {
   // In a real app, you would fetch token data based on the ID
   const token = {
     id: params.id,
