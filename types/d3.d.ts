@@ -39,6 +39,10 @@ declare module 'd3' {
   export function scaleBand<Domain = string>(): ScaleBand<Domain>
   export function scaleLinear<Output = number, Input = number>(): ScaleLinear<Output, Input>
 
+  // Add array functions
+  export function range(start: number, stop?: number, step?: number): number[]
+  export function range(stop: number): number[]
+
   // Add Axis interface
   interface Axis<Domain> {
     (selection: Selection<SVGGElement, unknown, null, undefined>): void
