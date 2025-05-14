@@ -72,6 +72,7 @@ declare module 'd3' {
       data: NewDatum[],
       key?: (d: NewDatum, i: number, data: NewDatum[]) => string
     ): Selection<GElement, NewDatum, PElement, PDatum>
+    datum<NewDatum>(value: NewDatum): Selection<GElement, NewDatum, PElement, PDatum>
     enter(): Selection<GElement, Datum, PElement, PDatum>
     attr(name: string, value: string | number | boolean | ((d: Datum, i: number, nodes: GElement[]) => string | number | boolean)): this
     style(name: string, value: string | number | boolean | ((d: Datum, i: number, nodes: GElement[]) => string | number | boolean)): this
