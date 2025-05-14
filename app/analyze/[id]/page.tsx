@@ -6,10 +6,12 @@ export const metadata: Metadata = {
   description: "Detailed analysis of token metrics and security",
 }
 
-export default function AnalyzePage({
+export default async function AnalyzePage({
   params,
 }: {
   params: { id: string }
 }) {
-  return <AnalyzePageClient params={params} />
+  // Ensure params is resolved before passing to client component
+  const resolvedParams = await Promise.resolve(params)
+  return <AnalyzePageClient params={resolvedParams} />
 }
