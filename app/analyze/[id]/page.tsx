@@ -8,13 +8,10 @@ export const metadata: Metadata = {
 
 type PageProps = {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+  searchParams?: { [key: string]: string | string[] | undefined }
 }
 
 export default async function AnalyzePage(props: PageProps) {
-  const [params, searchParams] = await Promise.all([
-    props.params,
-    props.searchParams
-  ])
+  const params = await props.params
   return <AnalyzePageClient params={params} />
 }

@@ -6,12 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 
 interface TokenPageProps {
-  params: {
-    id: string
-  }
+  params: Promise<{ id: string }>
+  searchParams?: { [key: string]: string | string[] | undefined }
 }
 
-export default function TokenPage({ params }: TokenPageProps) {
+export default async function TokenPage(props: TokenPageProps) {
+  const params = await props.params
   // In a real app, you would fetch token data based on the ID
   const token = {
     id: params.id,
