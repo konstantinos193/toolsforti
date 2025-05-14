@@ -89,9 +89,9 @@ export default function RiskRadarChart({ data }: RiskRadarChartProps) {
 
     // Create the radar chart path
     const radarLine = d3
-      .lineRadial<DataPoint>()
-      .radius((d) => rScale(d.value))
-      .angle((d, i) => i * angleSlice)
+      .line<[number, number]>()
+      .x((d) => d[0])
+      .y((d) => d[1])
       .curve(d3.curveLinearClosed)
 
     // Draw the radar chart path

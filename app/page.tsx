@@ -9,6 +9,44 @@ import TokenTable from "@/app/components/token-table"
 import React from "react"
 import type { Token } from "./types/token"
 
+interface ApiToken {
+  id: string
+  name: string
+  symbol: string
+  contractStatus: "Verified" | "Unverified" | "Suspicious"
+  riskLevel: "low" | "medium" | "high" | "critical"
+  age: string
+  created_time: string
+  marketCap: string
+  sats: string
+  change5m: string
+  change1h: string
+  change6h: string
+  change24h: string
+  volume: {
+    btc: number
+    usd: number
+  }
+  txns: string
+  ascended: {
+    direction: "up" | "down"
+    percent: number
+  }
+  verified: boolean
+  risk: {
+    level: "low" | "medium" | "high" | "critical"
+    score: number
+  }
+  btc: {
+    price: string
+    change: string
+  }
+  usd: {
+    price: string
+    change: string
+  }
+}
+
 function parseMarketCap(marketCap: string): number {
   if (!marketCap) return 0;
   // Remove $ and commas, handle K/M/B
@@ -38,12 +76,12 @@ function parseAgeToSeconds(age: string): number {
   return 0;
 }
 
-function isValidContractStatus(status: any): status is "Verified" | "Unverified" | "Suspicious" {
-  return status === "Verified" || status === "Unverified" || status === "Suspicious";
+function isValidContractStatus(status: unknown): status is "Verified" | "Unverified" | "Suspicious" {
+  return typeof status === "string" && ["Verified", "Unverified", "Suspicious"].includes(status)
 }
 
-function isValidRiskLevel(level: any): level is "low" | "medium" | "high" | "critical" {
-  return level === "low" || level === "medium" || level === "high" || level === "critical";
+function isValidRiskLevel(level: unknown): level is "low" | "medium" | "high" | "critical" {
+  return typeof level === "string" && ["low", "medium", "high", "critical"].includes(level)
 }
 
 export default function Home() {
@@ -267,13 +305,13 @@ export default function Home() {
   )
 }
 
-function mapApiTokenToToken(apiToken: any): Token {
+function mapApiTokenToToken(apiToken: ApiToken): Token {
   const token: Token = {
     id: apiToken.id,
     name: apiToken.name,
-    ticker: apiToken.ticker,
-    address: apiToken.address ?? apiToken.id,
-    logo: apiToken.logo ?? `https://images.odin.fun/token/${apiToken.id}`,
+    ticker: apiToken.symbol,
+    address: apiToken.id,
+    logo: `https://images.odin.fun/token/${apiToken.id}`,
     age: apiToken.age,
     ageValue: parseAgeToSeconds(apiToken.age),
     timestamp: new Date(apiToken.created_time).getTime() || 0,

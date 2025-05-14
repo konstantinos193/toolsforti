@@ -2,9 +2,19 @@
 
 "use client"
 
+interface SecurityScan {
+  id: string
+  name: string
+  status: "passed" | "failed" | "warning"
+  description: string
+  details?: string
+  timestamp: string
+}
+
 interface SecurityAuditProps {
-  securityScans: any[]
-  riskLevel: string
+  tokenId: string
+  securityScans: SecurityScan[]
+  riskLevel: "low" | "medium" | "high" | "critical" | "none"
 }
 
 export default function SecurityAudit({ securityScans, riskLevel }: SecurityAuditProps) {

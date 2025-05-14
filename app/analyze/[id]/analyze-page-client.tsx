@@ -18,26 +18,101 @@ type Props = {
   params: { id: string }
 }
 
+interface Token {
+  id: string
+  name: string
+  symbol: string
+  contractStatus: "Verified" | "Unverified" | "Suspicious"
+  riskLevel: "low" | "medium" | "high" | "critical" | "none"
+  age: string
+  created_time: string
+  marketCap: string
+  sats: string
+  change5m: string
+  change1h: string
+  change6h: string
+  change24h: string
+  volume: {
+    btc: number
+    usd: number
+  }
+  txns: string
+  ascended: {
+    direction: "up" | "down"
+    percent: number
+  }
+  verified: boolean
+  risk: {
+    level: "low" | "medium" | "high" | "critical" | "none"
+    score: number
+  }
+}
+
 export default function AnalyzePageClient({ params }: Props) {
   const { id } = params
-  const [token, setToken] = useState<any>(null)
+  const [token, setToken] = useState<Token | null>({
+    id: "",
+    name: "",
+    symbol: "",
+    contractStatus: "Unverified",
+    riskLevel: "none",
+    age: "",
+    created_time: "",
+    marketCap: "",
+    sats: "",
+    change5m: "",
+    change1h: "",
+    change6h: "",
+    change24h: "",
+    volume: {
+      btc: 0,
+      usd: 0
+    },
+    txns: "",
+    ascended: {
+      direction: "up",
+      percent: 0
+    },
+    verified: false,
+    risk: {
+      level: "none",
+      score: 0
+    }
+  })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // In a real app, you would fetch token data based on the ID
     // This is mock data for demonstration purposes
     // Update the mock token data to use ODIN.FUN format
-    const mockToken = {
+    const mockToken: Token = {
       id: id,
-      name:
-        id === "bitcat"
-          ? "BITCAT"
-          : id === "odinape"
-            ? "ODINAPE"
-            : id === "odindog"
-              ? "ODINDOG"
-              : id.toUpperCase(),
-      // ... rest of your mock data
+      name: id === "bitcat" ? "BITCAT" : id === "odinape" ? "ODINAPE" : id === "odindog" ? "ODINDOG" : id.toUpperCase(),
+      symbol: id.toUpperCase(),
+      contractStatus: "Unverified",
+      riskLevel: "none",
+      age: "1 day",
+      created_time: new Date().toISOString(),
+      marketCap: "1000000",
+      sats: "1000000",
+      change5m: "0",
+      change1h: "0",
+      change6h: "0",
+      change24h: "0",
+      volume: {
+        btc: 0,
+        usd: 0
+      },
+      txns: "0",
+      ascended: {
+        direction: "up",
+        percent: 0
+      },
+      verified: false,
+      risk: {
+        level: "none",
+        score: 0
+      }
     }
 
     setToken(mockToken)
