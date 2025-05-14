@@ -41,6 +41,9 @@ declare module 'd3' {
 
   // Extend Selection interface to handle data types
   interface Selection<GElement extends BaseType, Datum, PElement extends BaseType, PDatum> {
+    selectAll<ChildElement extends BaseType = BaseType, ChildDatum = unknown>(
+      selector: string
+    ): Selection<ChildElement, ChildDatum, GElement, Datum>
     data<NewDatum>(
       data: NewDatum[],
       key?: (d: NewDatum, i: number, data: NewDatum[]) => string
@@ -49,5 +52,6 @@ declare module 'd3' {
     attr(name: string, value: string | number | boolean | ((d: Datum, i: number, nodes: GElement[]) => string | number | boolean)): this
     style(name: string, value: string | number | boolean | ((d: Datum, i: number, nodes: GElement[]) => string | number | boolean)): this
     text(value: string | number | ((d: Datum, i: number, nodes: GElement[]) => string | number)): this
+    remove(): this
   }
 } 
