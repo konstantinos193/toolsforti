@@ -53,5 +53,7 @@ declare module 'd3' {
     style(name: string, value: string | number | boolean | ((d: Datum, i: number, nodes: GElement[]) => string | number | boolean)): this
     text(value: string | number | ((d: Datum, i: number, nodes: GElement[]) => string | number)): this
     remove(): this
+    append<K extends keyof SVGElementTagNameMap>(name: K): Selection<SVGElementTagNameMap[K], Datum, PElement, PDatum>
+    append(name: string): Selection<BaseType, Datum, PElement, PDatum>
   }
 } 
