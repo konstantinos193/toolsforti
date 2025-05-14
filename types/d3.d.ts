@@ -1,5 +1,6 @@
 declare module 'd3' {
   import { Selection, BaseType } from 'd3-selection'
+  import { ScaleBand } from 'd3-scale'
   
   export * from 'd3-array'
   export * from 'd3-axis'
@@ -34,4 +35,6 @@ declare module 'd3' {
 
   export function select(selector: string | BaseType): Selection<BaseType, unknown, null, undefined>
   export function selectAll(selector: string): Selection<BaseType, unknown, null, undefined>
+  
+  export function scaleBand<Domain = string>(): ScaleBand<Domain>
 } 
