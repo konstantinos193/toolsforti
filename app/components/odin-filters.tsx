@@ -14,11 +14,17 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 interface OdinFiltersProps {
-  onFilterChange: (filters: any) => void
+  onFilterChange: (filters: FilterState) => void
+}
+
+type FilterState = {
+  age: string | null
+  marketCap: string | null
+  ascended: string | null
 }
 
 export default function OdinFilters({ onFilterChange }: OdinFiltersProps) {
-  const [activeFilters, setActiveFilters] = useState({
+  const [activeFilters, setActiveFilters] = useState<FilterState>({
     age: null, // null, "1mo", "2mo", "3mo", "4mo+"
     marketCap: null, // null, "under1m", "1m-5m", "5m-10m", "10m+"
     ascended: null, // null, "up", "down"
@@ -26,7 +32,7 @@ export default function OdinFilters({ onFilterChange }: OdinFiltersProps) {
 
   const [showFilters, setShowFilters] = useState(false)
 
-  const handleFilterChange = (category: string, value: string | null) => {
+  const handleFilterChange = (category: keyof FilterState, value: string | null) => {
     const newFilters = {
       ...activeFilters,
       [category]: activeFilters[category] === value ? null : value,
@@ -246,7 +252,7 @@ export default function OdinFilters({ onFilterChange }: OdinFiltersProps) {
   )
 }
 
-function Check(props) {
+function Check(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
