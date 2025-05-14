@@ -1,10 +1,10 @@
 import AnalyzePageClient from "./analyze-page-client"
 
-type PageProps = {
+type Props = {
   params: { id: string }
   searchParams?: { [key: string]: string | string[] | undefined }
 }
 
-export default function AnalyzePage(props: PageProps) {
-  return <AnalyzePageClient params={props.params} />
+export default async function AnalyzePage({ params }: Props) {
+  return <AnalyzePageClient params={params} />
 }
