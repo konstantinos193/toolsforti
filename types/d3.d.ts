@@ -55,5 +55,6 @@ declare module 'd3' {
     remove(): this
     append<K extends keyof SVGElementTagNameMap>(name: K): Selection<SVGElementTagNameMap[K], Datum, PElement, PDatum>
     append(name: string): Selection<BaseType, Datum, PElement, PDatum>
+    call<A extends any[]>(fn: (selection: this, ...args: A) => void, ...args: A): this
   }
 } 
