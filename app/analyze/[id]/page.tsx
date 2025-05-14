@@ -20,13 +20,11 @@ interface PageProps {
 }
 
 interface AnalyzePageProps {
-  params: {
-    id: string
-  }
+  params: { id: string }
 }
 
 export default function AnalyzePage({ params }: AnalyzePageProps) {
-  const { id } = React.use(params)
+  const { id } = params
   const [token, setToken] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
