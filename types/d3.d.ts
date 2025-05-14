@@ -39,11 +39,25 @@ declare module 'd3' {
   export function scaleBand<Domain = string>(): ScaleBand<Domain>
   export function scaleLinear<Output = number, Input = number>(): ScaleLinear<Output, Input>
 
+  // Add Axis interface
+  interface Axis<Domain> {
+    (selection: Selection<SVGGElement, unknown, null, undefined>): void
+    scale(): ScaleLinear<number, Domain> | ScaleBand<Domain>
+    scale(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): this
+    ticks(count?: number): this
+    tickValues(values: Domain[]): this
+    tickFormat(format: (domainValue: Domain, index: number) => string): this
+    tickSize(size: number): this
+    tickSizeInner(size: number): this
+    tickSizeOuter(size: number): this
+    tickPadding(padding: number): this
+  }
+
   // Add axis functions
-  export function axisBottom<Domain>(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): (selection: Selection<SVGGElement, unknown, null, undefined>) => void
-  export function axisLeft<Domain>(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): (selection: Selection<SVGGElement, unknown, null, undefined>) => void
-  export function axisRight<Domain>(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): (selection: Selection<SVGGElement, unknown, null, undefined>) => void
-  export function axisTop<Domain>(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): (selection: Selection<SVGGElement, unknown, null, undefined>) => void
+  export function axisBottom<Domain>(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): Axis<Domain>
+  export function axisLeft<Domain>(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): Axis<Domain>
+  export function axisRight<Domain>(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): Axis<Domain>
+  export function axisTop<Domain>(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): Axis<Domain>
 
   // Extend Selection interface to handle data types
   interface Selection<GElement extends BaseType, Datum, PElement extends BaseType, PDatum> {
