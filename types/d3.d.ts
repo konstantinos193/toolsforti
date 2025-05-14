@@ -39,6 +39,12 @@ declare module 'd3' {
   export function scaleBand<Domain = string>(): ScaleBand<Domain>
   export function scaleLinear<Output = number, Input = number>(): ScaleLinear<Output, Input>
 
+  // Add axis functions
+  export function axisBottom<Domain>(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): (selection: Selection<SVGGElement, unknown, null, undefined>) => void
+  export function axisLeft<Domain>(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): (selection: Selection<SVGGElement, unknown, null, undefined>) => void
+  export function axisRight<Domain>(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): (selection: Selection<SVGGElement, unknown, null, undefined>) => void
+  export function axisTop<Domain>(scale: ScaleLinear<number, Domain> | ScaleBand<Domain>): (selection: Selection<SVGGElement, unknown, null, undefined>) => void
+
   // Extend Selection interface to handle data types
   interface Selection<GElement extends BaseType, Datum, PElement extends BaseType, PDatum> {
     selectAll<ChildElement extends BaseType = BaseType, ChildDatum = unknown>(
