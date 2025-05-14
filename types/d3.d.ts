@@ -81,4 +81,22 @@ declare module 'd3' {
     append(name: string): Selection<BaseType, Datum, PElement, PDatum>
     call<A extends any[]>(fn: (selection: this, ...args: A) => void, ...args: A): this
   }
+
+  // Add LineRadial interface
+  interface LineRadial<Datum> {
+    (data: Datum[]): string | null
+    radius(): (d: Datum, i: number, data: Datum[]) => number
+    radius(radius: number | ((d: Datum, i: number, data: Datum[]) => number)): this
+    angle(): (d: Datum, i: number, data: Datum[]) => number
+    angle(angle: number | ((d: Datum, i: number, data: Datum[]) => number)): this
+    curve(): d3.CurveFactory
+    curve(curve: d3.CurveFactory): this
+    defined(): (d: Datum, i: number, data: Datum[]) => boolean
+    defined(defined: boolean | ((d: Datum, i: number, data: Datum[]) => boolean)): this
+    context(): CanvasRenderingContext2D | null
+    context(context: CanvasRenderingContext2D | null): this
+  }
+
+  // Add lineRadial function
+  export function lineRadial<Datum>(): LineRadial<Datum>
 } 
