@@ -134,7 +134,7 @@ declare module 'd3' {
 
   // Add Line interface
   interface Line<Datum> {
-    (data: Datum[]): string | null
+    (data: Datum[]): string
     x(): (d: Datum, i: number, data: Datum[]) => number
     x(x: number | ((d: Datum, i: number, data: Datum[]) => number)): this
     y(): (d: Datum, i: number, data: Datum[]) => number
