@@ -38,4 +38,16 @@ declare module 'd3' {
   
   export function scaleBand<Domain = string>(): ScaleBand<Domain>
   export function scaleLinear<Output = number, Input = number>(): ScaleLinear<Output, Input>
+
+  // Extend Selection interface to handle data types
+  interface Selection<GElement extends BaseType, Datum, PElement extends BaseType, PDatum> {
+    data<NewDatum>(
+      data: NewDatum[],
+      key?: (d: NewDatum, i: number, data: NewDatum[]) => string
+    ): Selection<GElement, NewDatum, PElement, PDatum>
+    enter(): Selection<GElement, Datum, PElement, PDatum>
+    attr(name: string, value: string | number | boolean | ((d: Datum, i: number, nodes: GElement[]) => string | number | boolean)): this
+    style(name: string, value: string | number | boolean | ((d: Datum, i: number, nodes: GElement[]) => string | number | boolean)): this
+    text(value: string | number | ((d: Datum, i: number, nodes: GElement[]) => string | number)): this
+  }
 } 
