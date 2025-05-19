@@ -3,89 +3,85 @@ const axios = require('axios');
 const app = express();
 const PORT = 4000;
 
-// In-memory cache
+// Increase cache TTL to 5 minutes
 let cache = { tokens: null, timestamp: 0 };
-const CACHE_TTL = 2 * 60 * 1000; // 2 minutes
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-// Add BTC price cache
+// Add BTC price cache with longer TTL
 let btcPriceCache = { price: 0, timestamp: 0 };
-const BTC_PRICE_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const BTC_PRICE_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
+// Create axios instance with default config
+const axiosInstance = axios.create({
+  timeout: 5000,
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  }
+});
 
 // Helper: Assign risk level
 function assignRiskLevel(token) {
+  if (!token) return 'high';
+  
   if (token.holder_count < 10) return 'high';
   if (token.txn_count < 20) return 'high';
   if (token.verified === false) return 'high';
   if (token.volume < 1000000) return 'high';
   if (token.buy_count < 5 || token.sell_count < 5) return 'high';
   if (token.verified === true) return 'low';
-if (token.holder_count > 100) return 'low';
-if (token.volume > 10000000) return 'low';
-if (token.txn_count > 100) return 'low';
-if (token.featured === true) return 'low';
-return 'medium';
+  if (token.holder_count > 100) return 'low';
+  if (token.volume > 10000000) return 'low';
+  if (token.txn_count > 100) return 'low';
+  if (token.featured === true) return 'low';
+  return 'medium';
 }
 
-function formatCap(val) {
-  if (typeof val !== 'number' || isNaN(val)) return "N/A";
-  if (val >= 1e9) return `$${(val / 1e9).toFixed(1)}B`;
-  if (val >= 1e6) return `$${(val / 1e6).toFixed(1)}M`;
-  if (val >= 1e3) return `$${(val / 1e3).toFixed(1)}K`;
-  return `$${val}`;
-}
+// Optimize TV feed fetching with caching and timeout
+const tvFeedCache = new Map();
+const TV_FEED_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const TV_FEED_TIMEOUT = 1000; // 1 second timeout
 
 async function fetchTokenTVFeed(tokenId) {
+  // Skip TV feed fetching for now to improve performance
+  return null;
+
+  /* Commented out TV feed fetching
+  const cached = tvFeedCache.get(tokenId);
+  if (cached && (Date.now() - cached.timestamp < TV_FEED_CACHE_TTL)) {
+    return cached.data;
+  }
+
   try {
-    const response = await axios.get(`https://api.odin.fun/v1/token/${tokenId}/tv_feed`, {
+    const response = await axiosInstance.get(`https://api.odin.fun/v1/token/${tokenId}/tv_feed`, {
       params: {
-        resolution: 1, // 1 minute intervals
-        last: 1440 // Last 24 hours (24 * 60 minutes)
+        resolution: 1,
+        last: 1440
       },
-      timeout: 5000
+      timeout: TV_FEED_TIMEOUT
     });
+    
+    tvFeedCache.set(tokenId, {
+      data: response.data,
+      timestamp: Date.now()
+    });
+    
     return response.data;
   } catch (err) {
     console.error(`Error fetching TV feed for token ${tokenId}:`, err.message);
     return null;
   }
+  */
 }
 
-function calculate24hChange(tvFeed) {
-  if (!tvFeed || !Array.isArray(tvFeed) || tvFeed.length === 0) return "-";
-  
-  // Get the first and last price from the feed
-  const firstPrice = tvFeed[0].open;
-  const lastPrice = tvFeed[tvFeed.length - 1].close;
-  
-  if (typeof firstPrice !== 'number' || typeof lastPrice !== 'number') return "-";
-  
-  // Check if we have enough data points for 24h (1440 minutes)
-  if (tvFeed.length < 1440) {
-    // For tokens less than 24h old, calculate change from first to last available price
-    const firstTime = new Date(tvFeed[0].date_time).getTime();
-    const lastTime = new Date(tvFeed[tvFeed.length - 1].date_time).getTime();
-    const hoursSinceFirst = (lastTime - firstTime) / (1000 * 60 * 60);
-    
-    // Calculate percentage change
-    const change = ((lastPrice - firstPrice) / firstPrice) * 100;
-    return `${change.toFixed(2)}% (${hoursSinceFirst.toFixed(1)}h)`;
-  }
-  
-  // For tokens older than 24h, calculate standard 24h change
-  const change = ((lastPrice - firstPrice) / firstPrice) * 100;
-  return change.toFixed(2) + "%";
-}
-
+// Optimize BTC price fetching
 async function fetchBTCPrice() {
-  // Return cached price if it's fresh
   if (btcPriceCache.price && (Date.now() - btcPriceCache.timestamp < BTC_PRICE_CACHE_TTL)) {
     return btcPriceCache.price;
   }
 
   try {
-    const response = await axios.get('https://mempool.space/api/v1/prices', {
-      timeout: 5000
-    });
+    const response = await axiosInstance.get('https://mempool.space/api/v1/prices');
     
     if (response.data && typeof response.data.USD === 'number') {
       btcPriceCache = {
@@ -94,228 +90,262 @@ async function fetchBTCPrice() {
       };
       return response.data.USD;
     }
-    return 0;
+    return btcPriceCache.price || 0;
   } catch (err) {
     console.error('Error fetching BTC price:', err.message);
-    return btcPriceCache.price || 0; // Return cached price if available, otherwise 0
+    return btcPriceCache.price || 0;
   }
 }
 
+// Optimize token normalization with fallbacks
 async function normalizeToken(token) {
   if (!token || typeof token !== 'object') {
-    return {
-      id: "unknown",
-      name: "Unknown",
-      ticker: "???",
-      address: "unknown",
-      logo: "",
-      age: "Unknown",
-      ageValue: 0,
-      timestamp: 0,
-      marketCap: "N/A",
-      sats: 0,
-      change5m: "-",
-      change1h: "-",
-      change6h: "-",
-      change24h: "-",
-      volume: { btc: 0, usd: 0 },
-      txns: "N/A",
+    console.log('Debug: Invalid token object received:', token);
+    return null;
+  }
+
+  try {
+    console.log('Debug: Processing token:', token.id);
+    
+    // Skip TV feed fetching and just get BTC price
+    const btcPrice = await fetchBTCPrice();
+
+    // Calculate volume from token data
+    const volumeBtc = (token.volume || 0) / 100000000;
+    const volumeUsd = volumeBtc * btcPrice;
+
+    // Calculate age with validation
+    const age = calculateAge(token.created_time);
+    const timestamp = token.created_time ? new Date(token.created_time).getTime() : 0;
+
+    const normalizedToken = {
+      id: token.id || "unknown",
+      name: token.name || "Unknown",
+      ticker: token.ticker || "???",
+      address: token.id || "unknown",
+      logo: token.id ? `https://images.odin.fun/token/${token.id}` : "",
+      age: age.text,
+      ageValue: age.value,
+      timestamp,
+      marketCap: formatMarketCap(token.marketcap),
+      sats: (typeof token.price === 'number' && !isNaN(token.price)) ? token.price : 0,
+      change5m: formatChange(token.price_5m),
+      change1h: formatChange(token.price_1h),
+      change6h: formatChange(token.price_6h),
+      change24h: formatChange(token.price_1d),
+      volume: { btc: volumeBtc, usd: volumeUsd },
+      txns: formatTxns(token.txn_count),
       ascended: { percent: 0, direction: "up" },
-      risk: "medium",
-      contractStatus: undefined,
-    };
-  }
-
-  // Fetch TV feed data for 24h change and volume
-  const tvFeed = await fetchTokenTVFeed(token.id);
-  const change24h = calculate24hChange(tvFeed);
-  
-  // Calculate total volume from TV feed
-  let volumeBtc = 0;
-  if (tvFeed && Array.isArray(tvFeed)) {
-    // Sum all candle volumes for 24h total
-    const totalSats = tvFeed.reduce((sum, candle) => sum + (candle.volume || 0), 0);
-    volumeBtc = totalSats / 100000000;
-
-    console.log('DEBUG VOLUME:', {
-      sats: totalSats,
-      btc: volumeBtc,
-      usd: volumeBtc * await fetchBTCPrice(),
-      btcPrice: await fetchBTCPrice()
-    });
-  }
-
-  // Get current BTC price and calculate USD volume
-  const btcPrice = await fetchBTCPrice();
-  const volumeUsd = volumeBtc * btcPrice;
-
-  // Calculate age and timestamp
-  let age = "Unknown";
-  let ageValue = 0;
-  let timestamp = 0;
-
-  if (token.created_time) {
-    const created = new Date(token.created_time);
-    if (!isNaN(created.getTime())) {
-      timestamp = created.getTime();
-      const now = new Date();
-      const diffMs = now.getTime() - timestamp;
-      const diffSecs = Math.floor(diffMs / 1000);
-      const diffMins = Math.floor(diffSecs / 60);
-      const diffHours = Math.floor(diffMins / 60);
-      const diffDays = Math.floor(diffHours / 24);
-      const diffMonths = Math.floor(diffDays / 30);
-      const diffYears = Math.floor(diffMonths / 12);
-
-      ageValue = diffSecs;
-
-      if (diffSecs < 60) {
-        age = `${diffSecs}s`;
-      } else if (diffMins < 60) {
-        age = `${diffMins}m`;
-      } else if (diffHours < 24) {
-        age = `${diffHours}h`;
-      } else if (diffDays < 30) {
-        age = `${diffDays}d`;
-      } else if (diffMonths < 12) {
-        age = `${diffMonths}mo`;
-      } else {
-        age = `${diffYears}y`;
+      risk: token.risk,
+      contractStatus: token.verified === true ? "Verified" : (token.verified === false ? "Unverified" : undefined),
+      marketManipulation: {
+        title: "Data Unavailable",
+        details: ["Trading data analysis temporarily disabled"]
       }
-    }
+    };
+
+    console.log('Debug: Successfully normalized token:', token.id);
+    return normalizedToken;
+  } catch (error) {
+    console.error(`Error normalizing token ${token.id}:`, error);
+    return null;
   }
-
-  // Market Cap formatting
-  let marketCap = token.marketcap;
-  let marketCapStr = (typeof marketCap === 'number' && !isNaN(marketCap))
-    ? (marketCap >= 1e9
-        ? `$${(marketCap / 1e9).toFixed(1)}B`
-        : marketCap >= 1e6
-          ? `$${(marketCap / 1e6).toFixed(1)}M`
-          : marketCap >= 1e3
-            ? `$${(marketCap / 1e3).toFixed(1)}K`
-            : `$${marketCap}`)
-    : "N/A";
-
-  // Txns
-  let txns = token.txn_count;
-  let txnsStr = (typeof txns === 'number' && !isNaN(txns)) ? txns.toString() : "N/A";
-
-  // Sats
-  let sats = (typeof token.price === 'number' && !isNaN(token.price)) ? token.price : 0;
-
-  // Logo: use the id-based URL (as you do) or, if you want the real image, use the image field
-  let logo = token.id ? `https://images.odin.fun/token/${token.id}` : "";
-
-  const marketManipulation = analyzeMarketManipulation(tvFeed);
-
-  return {
-    id: token.id || "unknown",
-    name: token.name || "Unknown",
-    ticker: token.ticker || "???",
-    address: token.id || "unknown",
-    logo,
-    age,
-    ageValue,
-    timestamp,
-    marketCap: marketCapStr,
-    sats,
-    change5m: (typeof token.price_5m === 'number' && !isNaN(token.price_5m)) ? token.price_5m.toString() : "-",
-    change1h: (typeof token.price_1h === 'number' && !isNaN(token.price_1h)) ? token.price_1h.toString() : "-",
-    change6h: (typeof token.price_6h === 'number' && !isNaN(token.price_6h)) ? token.price_6h.toString() : "-",
-    change24h: change24h,
-    volume: {
-      btc: volumeBtc,
-      usd: volumeUsd,
-    },
-    txns: txnsStr,
-    ascended: { percent: 0, direction: "up" },
-    risk: token.risk,
-    contractStatus: token.verified === true ? "Verified" : (token.verified === false ? "Unverified" : undefined),
-    marketManipulation,
-  };
 }
 
-app.get('/api/tokens', async (req, res) => {
-  // Pagination params
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 50;
+// Helper functions for formatting
+function formatMarketCap(marketCap) {
+  if (typeof marketCap !== 'number' || isNaN(marketCap)) return "N/A";
+  if (marketCap >= 1e9) return `$${(marketCap / 1e9).toFixed(1)}B`;
+  if (marketCap >= 1e6) return `$${(marketCap / 1e6).toFixed(1)}M`;
+  if (marketCap >= 1e3) return `$${(marketCap / 1e3).toFixed(1)}K`;
+  return `$${marketCap}`;
+}
 
-  // Serve from cache if available and fresh
-  if (cache.tokens && (Date.now() - cache.timestamp < CACHE_TTL)) {
-    console.log('Serving from cache');
-    // Paginate cached tokens
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    return res.json({
-      tokens: cache.tokens.tokens.slice(start, end),
-      total: cache.tokens.total
-    });
+function formatChange(value) {
+  return (typeof value === 'number' && !isNaN(value)) ? value.toString() : "-";
+}
+
+function formatTxns(value) {
+  return (typeof value === 'number' && !isNaN(value)) ? value.toString() : "N/A";
+}
+
+function calculateAge(createdTime) {
+  if (!createdTime) return { text: "Unknown", value: 0 };
+  
+  const created = new Date(createdTime);
+  if (isNaN(created.getTime())) return { text: "Unknown", value: 0 };
+  
+  const now = new Date();
+  const diffMs = now.getTime() - created.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  
+  let text = "Unknown";
+  if (diffSecs < 60) text = `${diffSecs}s`;
+  else if (diffSecs < 3600) text = `${Math.floor(diffSecs / 60)}m`;
+  else if (diffSecs < 86400) text = `${Math.floor(diffSecs / 3600)}h`;
+  else if (diffSecs < 2592000) text = `${Math.floor(diffSecs / 86400)}d`;
+  else if (diffSecs < 31536000) text = `${Math.floor(diffSecs / 2592000)}mo`;
+  else text = `${Math.floor(diffSecs / 31536000)}y`;
+  
+  return { text, value: diffSecs };
+}
+
+// Optimize batch processing with smaller batches and better error handling
+async function processTokensInBatches(tokens, batchSize = 10) { // Increased batch size since we're not fetching TV feed
+  const results = [];
+  const batches = [];
+  
+  // Split tokens into batches
+  for (let i = 0; i < tokens.length; i += batchSize) {
+    batches.push(tokens.slice(i, i + batchSize));
   }
 
-  let allTokens = [];
+  // Process batches with concurrency control
+  for (const batch of batches) {
+    const batchPromises = batch.map(async (token) => {
+      try {
+        const risk = assignRiskLevel(token);
+        const normalizedToken = await normalizeToken({
+          ...token,
+          risk
+        });
+        if (!normalizedToken) {
+          console.log('Debug: Token normalization failed for:', token.id);
+        }
+        return normalizedToken;
+      } catch (error) {
+        console.error(`Error processing token ${token.id}:`, error.message);
+        return null;
+      }
+    });
+
+    const batchResults = await Promise.all(batchPromises);
+    results.push(...batchResults.filter(Boolean));
+  }
+
+  return results;
+}
+
+// Main API endpoint with optimized caching and error handling
+app.get('/api/tokens', async (req, res) => {
   try {
-    // Only fetch the first N tokens for speed
-    const response = await axios.get('https://api.odin.fun/v1/tokens', {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+
+    console.log('Debug: Request received for page', page, 'limit', limit);
+
+    // Serve from cache if available and fresh
+    if (cache.tokens && (Date.now() - cache.timestamp < CACHE_TTL)) {
+      console.log('Debug: Serving from cache, cache size:', cache.tokens.tokens.length);
+      const start = (page - 1) * limit;
+      const end = start + limit;
+      return res.json({
+        tokens: cache.tokens.tokens.slice(start, end),
+        total: cache.tokens.total
+      });
+    }
+
+    console.log('Debug: Cache miss, fetching from API');
+    // Fetch tokens with timeout
+    const response = await axiosInstance.get('https://api.odin.fun/v1/tokens', {
       params: {
         sort: 'created_time:desc',
         modified_by: 'table',
         page: 1,
         limit: 1000
-      },
-      timeout: 10000
+      }
+    });
+
+    console.log('Debug: API Response received:', {
+      hasData: !!response.data,
+      dataType: typeof response.data,
+      isArray: Array.isArray(response.data),
+      keys: response.data ? Object.keys(response.data) : []
     });
 
     let tokens = [];
     if (Array.isArray(response.data.data)) {
       tokens = response.data.data;
+      console.log('Debug: Using response.data.data, length:', tokens.length);
     } else if (Array.isArray(response.data.tokens)) {
       tokens = response.data.tokens;
+      console.log('Debug: Using response.data.tokens, length:', tokens.length);
     } else if (Array.isArray(response.data)) {
       tokens = response.data;
-    } else if (typeof response.data === 'object' && Object.keys(response.data).length > 0) {
+      console.log('Debug: Using response.data, length:', tokens.length);
+    } else if (typeof response.data === 'object') {
       tokens = [response.data];
+      console.log('Debug: Using single object response');
     }
 
-    // Process tokens in parallel with a concurrency limit
-    const concurrencyLimit = 5;
-    const chunks = [];
-    for (let i = 0; i < tokens.length; i += concurrencyLimit) {
-      chunks.push(tokens.slice(i, i + concurrencyLimit));
+    if (tokens.length === 0) {
+      console.log('Debug: No tokens found in response');
+      return res.json({ 
+        tokens: [], 
+        total: 0,
+        error: 'No tokens found in API response',
+        debug: {
+          responseData: response.data,
+          responseStatus: response.status,
+          responseHeaders: response.headers
+        }
+      });
     }
 
-    for (const chunk of chunks) {
-      const normalizedChunk = await Promise.all(
-        chunk.map(token => normalizeToken({
-          ...token,
-          risk: assignRiskLevel(token)
-        }))
-      );
-      allTokens.push(...normalizedChunk);
+    console.log('Debug: Processing', tokens.length, 'tokens');
+    // Process tokens in optimized batches
+    const allTokens = await processTokensInBatches(tokens);
+    console.log('Debug: Processed tokens count:', allTokens.length);
+    
+    if (allTokens.length === 0) {
+      return res.json({
+        tokens: [],
+        total: 0,
+        error: 'Token processing failed',
+        debug: {
+          originalTokensCount: tokens.length,
+          processedTokensCount: allTokens.length,
+          sampleToken: tokens[0]
+        }
+      });
     }
 
-    // Sort by timestamp (newer first)
+    // Sort and cache results
     allTokens.sort((a, b) => b.timestamp - a.timestamp);
-
-    // Cache the result
     cache.tokens = { tokens: allTokens, total: allTokens.length };
     cache.timestamp = Date.now();
 
-    // Paginate
+    // Return paginated results
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const paginatedTokens = allTokens.slice(startIndex, endIndex);
-
+    
+    console.log('Debug: Returning', paginatedTokens.length, 'tokens for page', page);
     res.json({
       tokens: paginatedTokens,
       total: allTokens.length
     });
   } catch (err) {
-    console.error('Error fetching tokens:', err.message);
-    return res.status(500).json({ error: 'Failed to fetch tokens', details: err.message });
+    console.error('Error in /api/tokens:', err);
+    res.status(500).json({ 
+      error: 'Failed to fetch tokens',
+      message: err.message,
+      stack: err.stack,
+      details: {
+        name: err.name,
+        code: err.code,
+        response: err.response ? {
+          status: err.response.status,
+          statusText: err.response.statusText,
+          data: err.response.data,
+          headers: err.response.headers
+        } : null
+      }
+    });
   }
 });
 
+// Start server
 app.listen(PORT, () => {
-console.log(`Server running on http://localhost:${PORT}/api/tokens`);
+  console.log(`Server running on http://localhost:${PORT}/api/tokens`);
 });

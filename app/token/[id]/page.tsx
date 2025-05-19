@@ -89,7 +89,7 @@ export default async function TokenPage(props: PageProps) {
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-3">
               <Image src="/images/forseti-logo.png" alt="Forseti" width={40} height={40} className="h-10 w-10" />
-              <span className="text-2xl font-bold text-gray-100">Forseti</span>
+              <span className="text-2xl font-bold text-gray-100">Forsetti Scan</span>
             </Link>
             <nav className="hidden space-x-6 md:flex">
               <Button variant="link" className="text-gray-300 hover:text-white">

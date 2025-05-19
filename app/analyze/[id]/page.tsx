@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import AnalyzePageClient from "./analyze-page-client"
 
 export const metadata: Metadata = {
-  title: "Token Analysis",
+  title: "Forsetti Scan - Token Analysis",
   description: "Detailed analysis of token metrics and security",
 }
 
