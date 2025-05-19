@@ -257,7 +257,7 @@ export default function Home() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <Image src="/images/forseti-logo.png" alt="Forseti" width={40} height={40} className="h-10 w-10" />
-              <span className="text-2xl font-bold text-gray-100">Forsetti Scan</span>
+              <span className="text-2xl font-bold text-gray-100">Forseti Scan</span>
             </div>
           </div>
 

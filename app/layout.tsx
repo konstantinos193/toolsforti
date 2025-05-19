@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "Forsetti Scan - Token Scanner",
+  title: "Forseti Scan - Token Scanner",
   description: "Monitor and analyze tokens across multiple blockchains",
     generator: 'v0.dev'
 }
